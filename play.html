@@ -1,0 +1,277 @@
+<head>
+<style>
+    /* .clear {
+        width: 100%;
+        clear: both;
+    } */
+    @import url('https://fonts.googleapis.com/css2?family=Syncopate&display=swap');
+
+    body {
+        background-color: #444;
+    }
+
+    .card {
+        float: center;
+        width: 950px;
+        height: 825px;
+    }
+    
+    /* button {
+        float: left;
+    }
+     */
+    .column {
+        float: left;
+        text-align: center;
+    }
+    
+    .number {
+        padding: 0px;
+        height: 165px;
+        line-height: 165px;
+        color: #f22d;
+        font-size: 160px;
+        font-weight: 1200;
+        font-family: 'Syncopate', sans-serif;
+        width: 190px;
+        border: 0px solid #000;
+        text-align: center;
+        vertical-align: center;
+        -webkit-text-stroke-width: 2px;
+        -webkit-text-stroke-color: #fffd;
+        cursor: crosshair;
+        -webkit-user-select: none; /* Safari */        
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* IE10+/Edge */
+        user-select: none; /* Standard */
+    }
+
+    .number:hover {
+        background-color: #ddd9;
+    }
+
+    .cell-13 {
+        color: #f44b;
+        -webkit-text-stroke-color: #fff4;
+    }
+
+    .cell-13:hover {
+        background-color: none;
+    }
+
+    .winner {
+        background-color: #ee29;
+        animation: blinkingBackground 1s infinite;
+    }
+    @keyframes blinkingBackground{
+        0% { background-color: #40c01890;}
+        25% { background-color: #4056c090;}
+        50% { background-color: #ef4a1a90;}
+        75% { background-color: #45487890;}
+        100% { background-color: #44a1d590;}
+    }
+
+    .controls {
+        float: left;
+        padding: 10px 0px;
+    }
+
+    .card-number {
+        font-size: 18px;
+        width: 40px;
+        text-align: center;
+        background-color: #222;
+        color: #fff;
+    }
+
+    .reset-button {
+        font-size: 18px;
+        height: 26px;
+        background-color: #222;
+        color: #fff;
+    }
+
+    .reset-button:disabled {
+        background-color: #444;
+        color: #aaa;
+    }
+
+</style>
+</head>
+<body>
+    <div class="clear"></div>
+    <div class="card" id="bg">
+        <div class="column c1"></div>
+        <div class="column c2"></div>
+        <div class="column c3"></div>
+        <div class="column c4"></div>
+        <div class="column c5"></div>
+    </div>
+    <div class="controls">
+        <input class="card-number" id="card-number" value="1"></input>
+        <button class="reset-button" id="button">Load Card</button>
+    </div>
+
+</body>
+<script>
+    var wins = [
+        [1, 2, 3, 4, 5],
+        [6, 7, 8, 9, 10],
+        [11, 12, 13, 14, 15],
+        [16, 17, 18, 19, 20],
+        [21, 22, 23, 24, 25],
+        [1, 6, 11, 16, 21],
+        [2, 7, 12, 17, 22],
+        [3, 8, 13, 18, 23],
+        [4, 9, 14, 19, 24],
+        [5, 10, 15, 20, 25],
+        [1, 7, 13, 19, 25],
+        [5, 9, 13, 17, 21]
+    ];
+    var checked = [13];
+
+    function loadCard(i) {
+        /* 
+            Check marked cells for BINGO wins
+        */
+        try {
+            var imagePath = "url('output/bingo-card-" + i.toString() + ".png')"
+            console.log(imagePath);
+            document.getElementById("bg").style.backgroundImage = imagePath;
+            refreshGrid();
+            button.disabled = true;
+        } catch(err) {
+            console.log(err);
+        }
+    }
+
+    function checkWins() {
+        /* 
+            Check marked cells for BINGO wins
+        */
+        console.log("Checking win conditions...");
+        var winCount = 0;
+        var toMark = [];
+
+        // Check each win condition
+        for (var i = 0; i < wins.length; i++) {
+            var numChecked = 0;
+            for (var n = 0; n < checked.length; n++) {
+                if (wins[i].indexOf(checked[n]) !== -1) {
+                    numChecked += 1;
+                }
+            }
+            if (numChecked === 5) {
+                winCount += 1;
+                toMark = toMark.concat(wins[i]);
+            }
+        }
+
+        // For each winning set, display the win then return true
+        console.log("toMark:");
+        console.log(toMark);
+        if (toMark.length > 0) {
+            for (var i = 1; i <= 25; i++) {
+                var cell = document.getElementById(i.toString());
+                if (toMark.indexOf(i) !== -1) {
+                    if (!cell.classList.contains("winner")) {
+                        cell.classList.add("winner");
+                    }
+                } else {
+                    cell.classList.remove("winner");
+                }
+            }
+            console.log("Win! (x" + winCount + ")");
+            return true;
+        }
+
+        // If no winning sets, remove winner class from all cells
+        for (var i = 1; i <= 25; i++) {
+            var targetCell = document.getElementById(i);
+            targetCell.classList.remove("winner");
+        }
+        console.log("No Win!")
+        return false;
+    }
+
+    function refreshGrid() {
+        // For each column, add 5 cells (rows)
+        for (var y = 0; y < 5; y++) {
+
+            // Get target column div and reset cells
+            var targetColumnclassName = "c" + (y+1).toString();
+            var targetColumn = document.getElementsByClassName(targetColumnclassName)[0];
+            targetColumn.innerHTML = "";
+            checked = [13];
+
+            // console.log("Target column: " + targetColumnclassName);
+
+            for (var x = 0; x < 5; x++) {
+                // Get cell number (top to bottom, left to right)
+                var cellNum = y*5 + x + 1;
+
+                // Create cell div
+                var newCellClassName = "cell-" + cellNum;
+                //console.log("Creating div with class '" + newCellClassName + "'");
+
+                var div = document.createElement("div");
+                div.className = newCellClassName;
+                div.classList = ["number"];
+                div.id = cellNum;
+
+                // For all but Free Space, add click listeners
+                if (div.id != 13) {
+                    div.addEventListener('click', function(e) {
+                        // Mark off check
+                        if (e.target.classList.contains("checked")) {
+                            console.log("Cell was checked, unchecking");
+                            e.target.classList.remove("checked");
+                            e.target.innerHTML = "";
+                            console.log("Popping " + e.target.id + " from checked");
+                            if (checked.indexOf(parseInt(e.target.id)) !== -1) {
+                                checked.splice(checked.indexOf(parseInt(e.target.id)), 1);
+                            }
+                        } else {
+                            console.log("Cell was unchecked, checking");
+                            e.target.classList.add("checked");
+                            e.target.innerHTML = "X";
+                            console.log("Pushing " + e.target.id + " to checked");
+                            if (checked.indexOf(parseInt(e.target.id)) === -1) {
+                                checked.push(parseInt(e.target.id));
+                            }
+                        }
+
+                        // Toggle in wins list
+                        console.log("Current checked:");
+                        console.log(checked);
+                        checkWins();
+                    });
+                } else {
+                    div.innerHTML = "X";
+                }
+                targetColumn.appendChild(div);
+            }
+        }
+    };
+
+    var input = document.getElementById("card-number");
+    var button = document.getElementById("button");
+    button.disabled = true;
+    
+    input.addEventListener('input', (event) => {
+        button.disabled = false;
+    });
+
+    input.addEventListener('keyup', function (event) {
+      if (event.keyCode === 13) {
+        loadCard(input.value);
+      }
+    });
+
+    button.onclick = function() {
+        loadCard(input.value);
+    };
+
+    // Initialize first card
+    loadCard(1);
+</script>
